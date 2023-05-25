@@ -89,9 +89,11 @@ public class HelloController {
             shotsColumn.setText(f);
         });
     }
-    public void syncTargets(double y1, double y2){
-            targetBig.setCenterY(y1);
-            targetSmall.setCenterY(y2);
+    public void syncTargets(double y1, int rev1, double y2, int rev2){
+        revOfTarBig = rev1;
+        revOfTarSmall = rev2;
+        targetBig.setCenterY(y1);
+        targetSmall.setCenterY(y2);
     }
     public void moveArrow(Line arrow){
         arrowThread = new Thread(()->{
@@ -128,6 +130,11 @@ public class HelloController {
                 readyColumn.setLayoutX(60);
                 scoreColumn.setLayoutX(60);
                 shotsColumn.setLayoutX(80);
+
+                targetBig.setVisible(false);
+                targetSmall.setVisible(false);
+                targetBig.setFill(Color.GREEN);
+                targetSmall.setFill(Color.ORANGE);
 
                 // старт потока, отвечающего за общение с сервером
                 connectThread = new Thread(()->{
@@ -204,9 +211,9 @@ public class HelloController {
                                     targetSmall.setCenterX(msg.x2);
                                     targetBig.setRadius(msg.r1);
                                     targetSmall.setRadius(msg.r2);
-                                    targetBig.setFill(Color.GREEN);
-                                    targetSmall.setFill(Color.ORANGE);
-                                    syncTargets(msg.y1, msg.y2);
+                                    targetBig.setVisible(true);
+                                    targetSmall.setVisible(true);
+                                    syncTargets(msg.y1, msg.rev1, msg.y2, msg.rev2);
 
                                     // старт потока, отвечающего за движение мишеней
                                     targetsThread = new Thread(()->{
@@ -240,7 +247,7 @@ public class HelloController {
                                     });
                                 }
                                 else if(msg.action == Action.ON_PAUSE){
-                                    syncTargets(msg.y1, msg.y2);
+                                    syncTargets(msg.y1, msg.rev1, msg.y2, msg.rev2);
                                     revOfTarBig = msg.rev1;
                                     revOfTarSmall = msg.rev2;
                                     // старт потока, отвечающего за движение мишеней
@@ -277,7 +284,7 @@ public class HelloController {
                                     });
                                 }
                                 else if(msg.action == Action.ARROW){
-                                    syncTargets(msg.y1, msg.y2);
+                                    syncTargets(msg.y1, msg.rev1, msg.y2, msg.rev2);
                                     moveArrow(arrows.get(msg.id - 1));
                                     // так как ArrayList начинается с 0, то из id всегда вычитаем 1
                                     // а далее увеличиваем количество выстрелов на 1
@@ -285,11 +292,48 @@ public class HelloController {
                                     renewStats();
                                 }
                                 else if(msg.action == Action.RESULT){
-                                    syncTargets(msg.y1, msg.y2);
+                                    syncTargets(msg.y1, msg.rev1, msg.y2, msg.rev2);
                                     arrowThread.interrupt();
                                     arrows.get(msg.id - 1).setLayoutX(14);
                                     localScore.set(msg.id - 1, msg.score);
                                     renewStats();
+                                }
+                                else if(msg.action == Action.WIN){
+                                    arrowThread.interrupt();
+                                    arrows.get(msg.id - 1).setLayoutX(14);
+                                    renewStats();
+
+                                    targetBig.setVisible(false);
+                                    targetSmall.setVisible(false);
+                                    targetsThread.interrupt();
+                                    //targetsThread=null;
+
+                                    Label win = new Label("Выиграл " + msg.nickName + "!");
+                                    win.setLayoutX(300);
+                                    win.setLayoutY(300);
+                                    Platform.runLater(() -> globe.getChildren().add(win));
+                                    try{
+                                        TimeUnit.SECONDS.sleep(5);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    Platform.runLater(() -> globe.getChildren().remove(win));
+
+                                    for(int i = 0; i < online; i++){
+                                        localScore.set(i, 0);
+                                        localShots.set(i, 0);
+                                    }
+                                    StringBuilder b = new StringBuilder(), c = new StringBuilder();
+                                    for(int i = 0; i < online; i++){
+                                        b.append(localScore.get(i)).append('\n');
+                                        c.append(localShots.get(i)).append('\n');
+                                    }
+                                    // я хз, но оно жалуется, что не final, создадим новую фигню
+                                    final String e = b.toString(), f = c.toString();
+                                    Platform.runLater(() -> {
+                                        scoreColumn.setText(e);
+                                        shotsColumn.setText(f);
+                                    });
                                 }
                         }
                     } catch (IOException e) {

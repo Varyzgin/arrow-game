@@ -20,6 +20,7 @@ public class MainServer {
     // список клиентов, подключенных к серверу, им будем отправлять текущее состояние системы
     ArrayList<ClientAtServer> allClients = new ArrayList<>();
     ArrayList<Integer> ids;
+    ArrayList<String> nickNames;
     ArrayList<Integer> scores;
     ArrayList<Integer> shots;
 
@@ -31,6 +32,7 @@ public class MainServer {
     int revOfTarBig = 1;
     int revOfTarSmall = 1;
 
+    Thread t;
 
     public int moveTarget(int rev, Circle target, double frame) {
         double newY = target.getCenterY() + 2 * rev;
@@ -43,8 +45,10 @@ public class MainServer {
     void broadCast(Action action, ClientAtServer client){
         Message msg = null;
         if(action == Action.ON_CONNECT){
-
-            ArrayList<String> nickNames = new ArrayList<>();
+            // разберемся с количеством клиентов и присвоим id по номеру подключения
+            num_of_clients++;
+            client.id = num_of_clients;
+            nickNames = new ArrayList<>();
             ArrayList<Double> arrows = new ArrayList<>();
 
             for(ClientAtServer allClients : allClients){
@@ -56,29 +60,32 @@ public class MainServer {
         }
         else if(action == Action.ON_READY){
             num_of_ready_clients++;
+            System.out.println(num_of_ready_clients);
             if(num_of_clients == num_of_ready_clients){
-                targetBig = new Circle();
-                targetBig.setCenterY(200);
-                targetBig.setRadius(50);
-
-                targetSmall = new Circle();
-                targetSmall.setCenterY(200);
-                targetSmall.setRadius(25);
                 // поток, занимающийся движениями мишени
-                Thread t = new Thread(() -> {
-                    while (true) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(20);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                if(t==null){
+                    targetBig = new Circle();
+                    targetBig.setCenterY(200);
+                    targetBig.setRadius(50);
+
+                    targetSmall = new Circle();
+                    targetSmall.setCenterY(200);
+                    targetSmall.setRadius(25);
+                    t = new Thread(() -> {
+                        while (true) {
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(20);
+                            } catch (InterruptedException e) {
+
+                            }
+                            revOfTarBig = moveTarget(revOfTarBig, targetBig, 800);
+                            for (int i = 0; i < 2; i++) {
+                                revOfTarSmall = moveTarget(revOfTarSmall, targetSmall, 800);
+                            }
                         }
-                        revOfTarBig = moveTarget(revOfTarBig, targetBig, 800);
-                        for (int i = 0; i < 2; i++) {
-                            revOfTarSmall = moveTarget(revOfTarSmall, targetSmall, 800);
-                        }
-                    }
-                });
-                t.start();
+                    });
+                    t.start();
+                }
                 ids = new ArrayList<>();
                 scores = new ArrayList<>();
                 shots = new ArrayList<>();
@@ -99,9 +106,21 @@ public class MainServer {
             msg = new Message(action, targetBig.getCenterY(), revOfTarBig, targetSmall.getCenterY(), revOfTarSmall, client.id);
         }
         else if(action == Action.RESULT){
-            scores.set(client.id - 1, client.score);
-            shots.set(client.id - 1, client.shots);
-            msg = new Message(action, targetBig.getCenterY(), revOfTarBig, targetSmall.getCenterY(), revOfTarSmall, client.shots, client.score, client.id);
+            if(client.score >= 10){
+                num_of_ready_clients = 0;
+                msg = new Message(Action.WIN, client.id, client.nickName, client.shots, client.score);
+                for(ClientAtServer clientAtServer : allClients){
+                    clientAtServer.shots = 0;
+                    clientAtServer.score = 0;
+                }
+                //t.interrupt();
+                //t = null;
+            }
+            else {
+                scores.set(client.id - 1, client.score);
+                shots.set(client.id - 1, client.shots);
+                msg = new Message(action, targetBig.getCenterY(), revOfTarBig, targetSmall.getCenterY(), revOfTarSmall, client.shots, client.score, client.id);
+            }
         }
 
         for(ClientAtServer allClients : allClients) {
@@ -123,9 +142,7 @@ public class MainServer {
 
                 ClientAtServer client = new ClientAtServer(cs, this);
                 allClients.add(client);
-                // разберемся с количеством клиентов и присвоим id по номеру подключения
-                num_of_clients++;
-                client.id = num_of_clients;
+
                 System.out.println("Client connected");
                 service.submit(client);
             }

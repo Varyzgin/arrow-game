@@ -100,6 +100,14 @@ public class Message {
         this.score = score;
         this.id = id;
     }
+    // WIN
+    public Message(Action action, int id, String nickName, int sho, int score) {
+        this.action = action;
+        this.id = id;
+        this.nickName = nickName;
+        this.sho = sho;
+        this.score = score;
+    }
 
     @Override
     public String toString() {
@@ -133,6 +141,9 @@ public class Message {
                 ", y2=" + y2 + ", rev2=" + rev2 +
                 ", sho=" + sho + ", score=" + score +
                 ", id=" + id;
+        else if(this.action == Action.WIN) str = str +
+                ", id=" + id + ", nickName=" + nickName +
+                ", sho=" + sho + ", score=" + score;
         str += '}';
         return str;
     }
