@@ -13,7 +13,6 @@ public class ClientAtServer implements Runnable {
     public String nickName;
     public int score = 0;
     public int shots = 0;
-    public Boolean online = false;
 
     Socket cs;
     MainServer ms;
@@ -69,9 +68,15 @@ public class ClientAtServer implements Runnable {
                     // другим пользователям
                     nickName = msg.nickName;
                     ms.broadCast(Action.ON_CONNECT, this);
-                } else if (msg.action == Action.READY) {
+                }
+                else if (msg.action == Action.READY)
                     ms.broadCast(Action.ON_READY, this);
-                } else if (msg.action == Action.SHOT) {
+                else if (msg.action == Action.PAUSE) {
+                    msg = new Message(Action.ON_PAUSE, ms.ids, ms.scores, ms.shots,
+                            ms.targetBig.getCenterY(), ms.revOfTarBig, ms.targetSmall.getCenterY(), ms.revOfTarSmall);
+                    send(msg);
+                }
+                else if (msg.action == Action.SHOT) {
                     ms.broadCast(Action.ARROW, this);
                     xArrow = 84;
                     double y = 150 * id; // расположение стрелы по вертикали
@@ -86,16 +91,18 @@ public class ClientAtServer implements Runnable {
                         xArrow += 1;
 
                         if (xArrow == 713) // достиг большой мишени
-                            if (y >= ms.yTarBig - 50 && y <= ms.yTarBig + 50) {
+                            if (y >= ms.targetBig.getCenterY() - 50 &&
+                                    y <= ms.targetBig.getCenterY() + 50) {
                                 score++;
                                 break;
                             }
                         if (xArrow == 849)  // достиг маленькой мишени
-                            if (y >= ms.yTarSmall - 25 && y <= ms.yTarSmall + 25) {
+                            if (y >= ms.targetSmall.getCenterY() - 25 &&
+                                    y <= ms.targetSmall.getCenterY() + 25) {
                                 score += 2;
                                 break;
                             }
-                        if (xArrow >= 900) // послыаем MICRO RES и ломаем цикл
+                        if (xArrow >= 900) // посылаем MICRO RES и ломаем цикл
                             break;
                     }
                     ms.broadCast(Action.RESULT, this);

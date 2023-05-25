@@ -68,6 +68,18 @@ public class Message {
         this.r2 = r2;
         this.rev2 = rev2;
     }
+    // ON_PAUSE
+    public Message(Action action, ArrayList<Integer> ids, ArrayList<Integer> scores,
+                   ArrayList<Integer> shots, double y1, int rev1, double y2, int rev2) {
+        this.action = action;
+        this.ids = ids;
+        this.scores = scores;
+        this.shots = shots;
+        this.y1 = y1;
+        this.rev1 = rev1;
+        this.y2 = y2;
+        this.rev2 = rev2;
+    }
     // ARROW
     public Message(Action action, double y1, int rev1, double y2, int rev2, int id) {
         this.action = action;
@@ -106,19 +118,20 @@ public class Message {
                 ", x1=" + x1 + ", y1=" + y1 + ", r1=" + r1 +
                 ", x2=" + x2 + ", y2=" + y2 + ", r2=" + r2 +
                 ", rev1=" + rev1 + ", rev2=" + rev2;
+        else if(this.action == Action.ON_PAUSE) str = str +
+                ", ids=" + ids +
+                ", scores=" + scores +
+                ", shots=" + shots +
+                ", y1=" + y1 + ", rev1=" + rev1 +
+                ", y2=" + y2 + ", rev2=" + rev2;
         else if(this.action == Action.ARROW) str = str +
-                "y1=" + y1 +
-                ", rev1=" + rev1 +
-                ", y2=" + y2 +
-                ", rev2=" + rev2 +
+                ", y1=" + y1 + ", rev1=" + rev1 +
+                ", y2=" + y2 + ", rev2=" + rev2 +
                 ", id=" + id;
         else if(this.action == Action.RESULT) str = str +
-                ", y1=" + y1 +
-                ", rev1=" + rev1 +
-                ", y2=" + y2 +
-                ", rev2=" + rev2 +
-                ", sho=" + sho +
-                ", score=" + score +
+                ", y1=" + y1 + ", rev1=" + rev1 +
+                ", y2=" + y2 + ", rev2=" + rev2 +
+                ", sho=" + sho + ", score=" + score +
                 ", id=" + id;
         str += '}';
         return str;
