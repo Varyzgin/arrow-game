@@ -4,13 +4,11 @@ import java.util.ArrayList;
 
 public class Message {
     public String nickName;
-    public Boolean ready;
-    public Boolean shot;
     public ArrayList<Integer> ids;
     public ArrayList<String> nickNames;
     public ArrayList<Integer> scores;
     public ArrayList<Integer> shots;
-    public ArrayList<Boolean> online;
+    public ArrayList<Integer> wins;
     public ArrayList<Double> arrows; // положение стрел
     public double x1;
     public double y1;
@@ -31,7 +29,7 @@ public class Message {
         this.nickName = nickName;
     }
 
-    // READY or SHOT or simple message
+    // READY or SHOT or simple message (I need Leaders)
     public Message(Action action) {
         this.action = action;
     }
@@ -108,6 +106,12 @@ public class Message {
         this.sho = sho;
         this.score = score;
     }
+    // ON_LEADERS
+    public Message(ArrayList<String> nickNames, ArrayList<Integer> wins, Action action) {
+        this.nickNames = nickNames;
+        this.wins = wins;
+        this.action = action;
+    }
 
     @Override
     public String toString() {
@@ -144,6 +148,9 @@ public class Message {
         else if(this.action == Action.WIN) str = str +
                 ", id=" + id + ", nickName=" + nickName +
                 ", sho=" + sho + ", score=" + score;
+        else if(this.action == Action.ON_LEADERS) str = str +
+                ", nickNames=" + nickNames +
+                ", wins=" + wins;
         str += '}';
         return str;
     }

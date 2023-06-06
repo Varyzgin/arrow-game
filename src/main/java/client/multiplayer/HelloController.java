@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class HelloController {
     @FXML private AnchorPane globe;
+    @FXML private AnchorPane buttons;
     @FXML private TextField nickname_field;
     @FXML void initialize() {
     }
@@ -43,10 +44,14 @@ public class HelloController {
     final Label scoreColumn = new Label();
     final Label shotsColumn = new Label();
     final Label readyColumn = new Label();
+    final Label leadersColumn = new Label();
+    final Label winsColumn = new Label();
     ArrayList<Line> arrows = new ArrayList<>();
     ArrayList<String> localNickNames = new ArrayList<>();
     ArrayList<Integer> localScore = new ArrayList<>();
     ArrayList<Integer> localShots = new ArrayList<>();
+    ArrayList<String> localLeaders = new ArrayList<>();
+    ArrayList<Integer> localWins = new ArrayList<>();
     int online, id;
 
     int revOfTarBig = 1;
@@ -127,9 +132,15 @@ public class HelloController {
                 globe.getChildren().add(shotsColumn);
                 globe.getChildren().add(readyColumn);
 
+                buttons.getChildren().add(leadersColumn);
+                buttons.getChildren().add(winsColumn);
+
                 readyColumn.setLayoutX(60);
                 scoreColumn.setLayoutX(60);
                 shotsColumn.setLayoutX(80);
+
+                leadersColumn.setLayoutX(260);
+                winsColumn.setLayoutX(320);
 
                 targetBig.setVisible(false);
                 targetSmall.setVisible(false);
@@ -202,7 +213,11 @@ public class HelloController {
                                             a.append('\n');
 
                                     final String b = a.toString();
-                                    Platform.runLater(() -> readyColumn.setText(b));
+                                    Platform.runLater(() -> {
+                                        readyColumn.setText(b);
+                                        shotsColumn.setText("");
+                                        scoreColumn.setText("");
+                                    });
                                 }
                                 else if(msg.action == Action.GO){
                                     revOfTarBig = msg.rev1;
@@ -335,6 +350,20 @@ public class HelloController {
                                         shotsColumn.setText(f);
                                     });
                                 }
+                            if(msg.action == Action.ON_LEADERS){
+                                localLeaders = msg.nickNames;
+                                localWins = msg.wins;
+                                StringBuilder a = new StringBuilder(), b = new StringBuilder();
+                                for(int i = 0; i < localLeaders.size(); i++){
+                                    a.append(localLeaders.get(i)).append('\n');
+                                    b.append(localWins.get(i)).append('\n');
+                                }
+                                final String c = a.toString(), d = b.toString();
+                                Platform.runLater(() -> {
+                                    leadersColumn.setText(c);
+                                    winsColumn.setText(d);
+                                });
+                            }
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -368,6 +397,10 @@ public class HelloController {
     }
     @FXML protected void Shot(){
         Message msg = new Message(Action.SHOT);
+        send(msg);
+    }
+    @FXML protected void Leaders(){
+        Message msg = new Message(Action.LEADERS);
         send(msg);
     }
 }
